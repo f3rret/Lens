@@ -3,6 +3,7 @@ import styles from '../styles/Home.module.css'
 import CamCard from './camcard';
 import Statistics from './statistics';
 import Sessions from './sessions';
+import Logs from './logs';
 
 import { CamsContext } from './lib/context';
 import { useContext } from 'react';
@@ -18,6 +19,7 @@ export default function RightPanel(){
             { showCard && <CamCard /> }
             { !showCard && <Statistics /> }
             { !showCard && showSessions && <Sessions /> }
+            <Logs />
         </div>
     );
 }

@@ -2,6 +2,7 @@ import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import LeftPanel from './leftpanel';
 import RightPanel from './rightpanel';
+import Footer from './footer';
 import { Alert } from 'reactstrap';
 import { CamsContext } from './lib/context';
 import Script from 'next/script';
@@ -11,7 +12,8 @@ import { useState, useMemo, useCallback } from 'react';
 
 export default function Home() {
 
-  const [selected, setSelected] = useState({});
+  const [ selected, setSelected ] = useState({});
+  const [ mainActive, setMainActive ] = useState(true);
   const jsonFetcher = (...args) => fetch(...args).then(res => res.json());
   const { data, error, mutate } = useSWR('api/cams', jsonFetcher, { refreshInterval: 10000 });
   const err = error || (data && data.error);
@@ -60,6 +62,11 @@ export default function Home() {
     return sessions[sessid] || {cam: 'unknown'};
   }, [sessions]);
 
+
+  const switchMainActive = () => {
+    setMainActive(!mainActive);
+  } 
+
   return (
     <>
       <Script src='/hls.min.js' strategy='afterInteractive'/>
@@ -76,20 +83,13 @@ export default function Home() {
               />
         </Head>
         {err && <Alert color='danger' fade={false}>{Object.keys(err).length ? JSON.stringify(err):'Server unavailable'}</Alert>}
-        <main className={styles.main}>
+        <main className={mainActive ? styles.main : `${styles.main} ${styles.mainInactive}`} onClick={() => mainActive ? null : switchMainActive()}>
           {!err && <CamsContext.Provider value={{ cams: data, selected, onSelect, onChangeList, getSessionInfo, onKickSession, kicked }}>
                     <LeftPanel />
                     <RightPanel />
                   </CamsContext.Provider>}
         </main>
-        <footer className={styles.footer}>
-          <a rel="noopener noreferrer">
-              <span className={styles.logo}>
-                <i className="bi-instagram"/>{' '}<span>Lens</span>
-              </span>
-              control panel
-          </a>
-        </footer>
+        <Footer isActive={!mainActive} onActivate={switchMainActive}/>
       </div>
     </>
   )
