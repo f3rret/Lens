@@ -1,17 +1,21 @@
 
-import { Card, CardHeader, CardBody, Badge } from 'reactstrap';
+import { Row, Col, Card, CardHeader, CardBody, Badge } from 'reactstrap';
 import { io } from 'socket.io-client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import styles from '../styles/Home.module.css'
-import { style } from 'dom-helpers';
 
 export default function Logs(){
 
     const [ rows, setRows ] = useState('');
+    const [ played, setPlayed ] = useState(true);
+
+    let socket;
+    let temp='';
 
     useEffect(() => {
-        let socket;
-        let temp='';
+        if(!played){
+            return;
+        }
 
         fetch('/api/socket').then(()=>{
             socket = io();
@@ -20,19 +24,30 @@ export default function Logs(){
                 //console.log('connected')
             });
 
+            const INF = new RegExp('\\x1B\\[32mINF\\x1B\\[0m', 'igm');
+            const WAR = new RegExp('\\x1B\\[1;33mWAR\\x1B\\[0m', 'igm');
+            const ERR = new RegExp('\\x1B\\[1;34mERR\\x1B\\[0m', 'igm');
+            const BRACKET1 = new RegExp('\\x1B\\[90m', 'igm');
+            const BRACKET2 = new RegExp('\\s\\x1B\\[0m', 'igm');
+
             socket.on('log', (msg) => {
                 let row = new TextDecoder().decode(msg);
                 let ltype = 'light';
-                console.log([row]);
-                row = row.replaceAll(/\x1B\[90m/igm, '');
-                row = row.replaceAll(/\s\x1B\[0m/igm, '');
-                if( row.indexOf('\x1B[32mINF\x1B[0m') > -1){
+
+                row = row.replaceAll(BRACKET1, '');
+                row = row.replaceAll(BRACKET2, '');
+
+                if(INF.test(row)){
                     ltype='info';
-                    row = row.replace(/\x1B\[32mINF\x1B\[0m/, '');
+                    row = row.replaceAll(INF, '');
                 }
-                else if( row.indexOf('\x1B[1;33mWAR\x1B[0m') > -1){
+                else if(WAR.test(row)){
                     ltype='warning';
-                    row = row.replace(/\x1B\[1;33mWAR\x1B\[0m/, '');
+                    row = row.replaceAll(WAR, '');
+                }
+                else if(ERR.test(row)){
+                    ltype='error';
+                    row = row.replaceAll(ERR, '');
                 }
                 temp = <><Badge className={styles.logBadge} color={ltype}>&nbsp;</Badge><span className={styles.logRow}> {row} </span> {temp}</>;
                 setRows(temp);
@@ -43,15 +58,31 @@ export default function Logs(){
             if(socket) socket.close();
             if(temp) temp='';
         }
-    }, []);
+    }, [played]);
     
+
+    const handlePause = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setPlayed(!played);
+    }
+
     return(
         <Card>
             <CardHeader tag='h5'>Logs</CardHeader>
             <CardBody>
-            <div className={styles.logsContainer}>
-                { rows }
-            </div>
+                <Row>
+                    <Col xs={10}></Col>
+                    <Col xs={2}>
+                        <a onClick={handlePause} style={{cursor: 'pointer'}}>{played ? <span className="bi-pause"> pause</span>:<span className="bi-play"> resume</span>}</a>
+                    </Col>
+                </Row>
+                <Row>
+                    <div className={styles.logsContainer}>
+                        { rows }
+                    </div>
+                </Row>
             </CardBody>
         </Card>);
 }
