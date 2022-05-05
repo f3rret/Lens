@@ -33,23 +33,22 @@ export default function Footer(props){
 
     return (<footer className={active ? `${styles.footer} ${styles.footerActive}`:styles.footer}>
                 <Form className={styles.footerForm}>
-                    <Row style={{flexFlow: 'row-reverse'}} className={styles.footerSwitch} onClick={()=>{
-                            setActive(!active);
-                            onActivate();
+                    <Row>
+                        <a rel="noopener noreferrer" className={styles.footerSwitch} onClick={()=>{
+                                setActive(!active);
+                                onActivate();
                             }}>
-                        <a rel="noopener noreferrer" style={{padding: '2rem', width: '15rem'}}>
                             <span className={styles.logo}>
                                 <i className="bi-instagram"/>{' '}<span>Lens</span>
                             </span>
-                            control panel
                         </a>
                     </Row>
-                    {active && <Row style={{paddingLeft: '5rem'}}>
-                            <Col xs={3} style={{alignSelf: 'center'}}>Perform full restart rtsp-simple-server process: </Col>
-                            <Col xs={8}>
-                                <Button sm={2} style={ text1 === LABEL1 ? BUTTON_READY : BUTTON_INPROGRESS} onClick={tryRestart}>{text1}</Button>
-                            </Col>
-                    </Row>}
+                    {active && <Row style={{paddingLeft: '7rem'}}>
+                                    <Col xs={4} style={{alignSelf: 'center'}}>Perform full restart rtsp-simple-server process: </Col>
+                                    <Col xs={8}>
+                                        <Button sm={2} style={ text1 === LABEL1 ? BUTTON_READY : BUTTON_INPROGRESS} onClick={tryRestart}>{text1}</Button>
+                                    </Col>
+                                </Row>}
                 </Form>
             </footer>);  
 }

@@ -3,7 +3,7 @@ import styles from '../styles/Home.module.css'
 import LeftPanel from './leftpanel';
 import RightPanel from './rightpanel';
 import Footer from './footer';
-import { Alert } from 'reactstrap';
+import { Alert, Button } from 'reactstrap';
 import { CamsContext } from './lib/context';
 import Script from 'next/script';
 
@@ -67,6 +67,17 @@ export default function Home() {
     setMainActive(!mainActive);
   } 
 
+  const [coreState, setCoreState] = useState(0);
+  const tryRestart = () => {
+    if(coreState === 0){
+      setCoreState(1);
+
+      fetch('/api/restartcore').then(res => {
+        setTimeout(()=>{setCoreState(0); mutate('api/cams')}, 2000);
+      });
+    }
+  }
+
   return (
     <>
       <Script src='/hls.min.js' strategy='afterInteractive'/>
@@ -82,8 +93,13 @@ export default function Home() {
                 type="font/woff2"
               />
         </Head>
-        {err && <Alert color='danger' fade={false}>{Object.keys(err).length ? JSON.stringify(err):'Server unavailable'}</Alert>}
+        
         <main className={mainActive ? styles.main : `${styles.main} ${styles.mainInactive}`} onClick={() => mainActive ? null : switchMainActive()}>
+          {err && err.errno === 'ECONNREFUSED' && 
+            <Button sm={2} className={styles.startCoreButton} onClick={tryRestart}>{coreState === 1 ? 'Starting...': 'Start core server'}</Button>   }
+          {err && err.errno !== 'ECONNREFUSED' && <Alert color='danger' fade={false}>
+                  {Object.keys(err).length ? JSON.stringify(err) : 'Core server unavailable'}
+                </Alert>}
           {!err && <CamsContext.Provider value={{ cams: data, selected, onSelect, onChangeList, getSessionInfo, onKickSession, kicked }}>
                     <LeftPanel />
                     <RightPanel />
